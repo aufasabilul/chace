@@ -114,9 +114,8 @@
         <div class="container mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
             <!-- Logo -->
             <div class="text-3xl font-black tracking-tighter uppercase">
-                CACHÉ<span class="text-cache-red">.</span>
-            </div>
-            
+                CACHÉ
+            </div>            
             <!-- Desktop Nav -->
             <nav class="hidden md:flex gap-8 font-bold uppercase tracking-wider text-sm">
                 <a href="#hero" class="hover:text-cache-red transition-colors">Home</a>
@@ -160,7 +159,7 @@
         <!-- Shop Section -->
         <section id="shop" class="bg-cache-white py-20">
             <div class="container mx-auto px-4 md:px-8">
-                <h2 class="text-4xl font-black uppercase tracking-tighter mb-12 border-b-4 border-cache-black inline-block pb-2">Koleksi Terbaru <span class="text-cache-red">.</span></h2>
+                <h2 class="text-4xl font-black uppercase tracking-tighter mb-4">CACHÉ</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
                     
@@ -180,9 +179,9 @@
                                 <div>
                                     <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pilih Ukuran</label>
                                     <select id="size-prod-1" class="w-full border-2 border-cache-black p-3 font-semibold bg-white focus:outline-none focus:border-cache-red cursor-pointer">
-                                        <option value="S">S</option>
                                         <option value="M" selected>M</option>
                                         <option value="L">L</option>
+                                        <option value="XL">XL</option>
                                     </select>
                                 </div>
                                 <button onclick="addProdToCart(1, 'CACHÉ Signature Black T-Shirt', 149000)" class="w-full bg-cache-black text-white font-bold uppercase py-3 hover:bg-cache-red transition-colors border-2 border-cache-black">
@@ -208,10 +207,10 @@
                                 <div>
                                     <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pilih Ukuran</label>
                                     <select id="size-prod-2" class="w-full border-2 border-cache-black p-3 font-semibold bg-white focus:outline-none focus:border-cache-red cursor-pointer">
-                                        <option value="S">S</option>
                                         <option value="M" selected>M</option>
                                         <option value="L">L</option>
-                                    </select>
+                                        <option value="XL">XL</option>
+                                    </select> <!-- INI YANG SEBELUMNYA HILANG -->
                                 </div>
                                 <button onclick="addProdToCart(2, 'CACHÉ Signature Red Hoodie', 249000)" class="w-full bg-cache-black text-white font-bold uppercase py-3 hover:bg-cache-red transition-colors border-2 border-cache-black">
                                     Tambah ke Keranjang
@@ -387,32 +386,25 @@
             showToast(`Berhasil menambahkan ${name} (${size})!`);
         }
 
-        // Update the Cart HTML & Badge
+                // Update the Cart HTML & Badge
         function updateCartUI() {
             const cartItemsContainer = document.getElementById('cart-items');
-            const emptyMsg = document.getElementById('empty-cart-msg');
             const cartCounter = document.getElementById('cart-counter');
             const cartCountTitle = document.getElementById('cart-count-title');
             const cartTotal = document.getElementById('cart-total');
             
-            // Calculate totals
             let totalItems = 0;
             let totalPrice = 0;
-            
-            cartItemsContainer.innerHTML = ''; // Clear current list
+            let htmlContent = '';
 
             if (cart.length === 0) {
-                emptyMsg.style.display = 'block';
-                cartItemsContainer.appendChild(emptyMsg);
+                htmlContent = `<div class="text-center text-gray-500 font-medium mt-10" id="empty-cart-msg">Keranjang belanjamu masih kosong.</div>`;
             } else {
-                emptyMsg.style.display = 'none';
-                
                 cart.forEach((item, index) => {
                     totalItems += item.qty;
                     totalPrice += (item.price * item.qty);
                     
-                    // Create Cart Item HTML
-                    const itemHTML = `
+                    htmlContent += `
                         <div class="flex gap-4 border-b border-gray-200 pb-4">
                             <div class="w-20 h-20 bg-gray-100 border border-cache-black shrink-0">
                                 <img src="${item.img}" class="w-full h-full object-cover">
@@ -434,9 +426,10 @@
                             </button>
                         </div>
                     `;
-                    cartItemsContainer.innerHTML += itemHTML;
                 });
             }
+
+            cartItemsContainer.innerHTML = htmlContent;
 
             // Update Badges & Total Text
             cartCounter.innerText = totalItems;
