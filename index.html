@@ -159,9 +159,10 @@
         <!-- Shop Section -->
         <section id="shop" class="bg-cache-white py-20">
             <div class="container mx-auto px-4 md:px-8">
-                <h2 class="text-4xl font-black uppercase tracking-tighter mb-4">CACHÉ</h2>
+                <h2 class="text-4xl font-black uppercase tracking-tighter mb-8 border-b-4 border-cache-black inline-block pb-2">CACHÉ</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+                <!-- Berubah menjadi 3 kolom (lg:grid-cols-3) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     
                     <!-- Product 1: T-Shirt -->
                     <div class="group border-2 border-cache-black bg-white p-4 flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-2 transition-transform duration-300">
@@ -210,9 +211,38 @@
                                         <option value="M" selected>M</option>
                                         <option value="L">L</option>
                                         <option value="XL">XL</option>
-                                    </select> <!-- INI YANG SEBELUMNYA HILANG -->
+                                    </select> 
                                 </div>
                                 <button onclick="addProdToCart(2, 'CACHÉ Signature Red Hoodie', 249000)" class="w-full bg-cache-black text-white font-bold uppercase py-3 hover:bg-cache-red transition-colors border-2 border-cache-black">
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 3: Jeans (BARU) -->
+                    <div class="group border-2 border-cache-black bg-white p-4 flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-2 transition-transform duration-300">
+                        <div class="relative bg-gray-100 aspect-square border-2 border-cache-black mb-4 overflow-hidden">
+                            <img src="Denim CACHÉ Washed.jpg" id="img-prod-3" alt="Signature Washed Denim" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/500x500/a3b1c6/ffffff?text=Jeans'">
+                            <span class="absolute top-2 left-2 bg-cache-black text-white text-xs font-bold px-2 py-1 uppercase">Limited</span>
+                        </div>
+                        <div class="flex-grow flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-xl uppercase tracking-tight">CACHÉ Signature Washed Denim</h3>
+                                <p class="text-cache-red font-black text-xl mt-1">Rp 349.000</p>
+                            </div>
+                            
+                            <div class="mt-6 space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pilih Ukuran</label>
+                                    <select id="size-prod-3" class="w-full border-2 border-cache-black p-3 font-semibold bg-white focus:outline-none focus:border-cache-red cursor-pointer">
+                                        <option value="28">28</option>
+                                        <option value="30" selected>30</option>
+                                        <option value="32">32</option>
+                                        <option value="34">34</option>
+                                    </select>
+                                </div>
+                                <button onclick="addProdToCart(3, 'CACHÉ Signature Washed Denim', 349000)" class="w-full bg-cache-black text-white font-bold uppercase py-3 hover:bg-cache-red transition-colors border-2 border-cache-black">
                                     Tambah ke Keranjang
                                 </button>
                             </div>
@@ -237,7 +267,7 @@
                     <div class="p-6 md:border-x-2 border-cache-black">
                         <i class="fa-solid fa-shirt text-4xl mb-4 text-cache-red"></i>
                         <h4 class="font-black text-lg uppercase mb-2">Premium Quality</h4>
-                        <p class="text-sm text-gray-600">Material kain katun ekstra tebal dan potongan yang dirancang untuk kenyamanan streetwear.</p>
+                        <p class="text-sm text-gray-600">Material kain ekstra tebal dan potongan yang dirancang untuk kenyamanan streetwear.</p>
                     </div>
                     <!-- Policy 3 -->
                     <div class="p-6">
@@ -386,7 +416,7 @@
             showToast(`Berhasil menambahkan ${name} (${size})!`);
         }
 
-                // Update the Cart HTML & Badge
+        // Update the Cart HTML & Badge
         function updateCartUI() {
             const cartItemsContainer = document.getElementById('cart-items');
             const cartCounter = document.getElementById('cart-counter');
@@ -443,20 +473,39 @@
             updateCartUI();
         }
 
-        // Checkout Button Action (Dummy)
+        // Checkout Button Action (Arahkan ke WhatsApp)
         function checkout() {
             if(cart.length === 0) {
                 showToast("Keranjang Anda masih kosong!");
                 return;
             }
             
-            toggleCart(); // Close sidebar
-            // Show checkout message instead of alert()
-            showToast("Memproses Checkout... (Dummy: Anda akan dialihkan ke Payment Gateway / WA)");
+            toggleCart(); // Tutup sidebar keranjang
+            showToast("Mengarahkan pesananmu ke WhatsApp...");
             
-            // Optional: Clear cart after checkout
-            // cart = [];
-            // updateCartUI();
+            // 1. Buat teks pesan tanpa simbol aneh
+            let pesanWA = "Halo CACHÉ, saya ingin memesan:\n";
+            let totalBelanja = 0;
+            
+            cart.forEach((item) => {
+                pesanWA += `• ${item.qty}x ${item.name} (Size: ${item.size})\n`;
+                totalBelanja += (item.price * item.qty);
+            });
+            
+            pesanWA += `\nTotal Belanja: ${formatRupiah(totalBelanja)}\n\nMohon info ketersediaan stok dan total ongkirnya. Terima kasih!`;
+            
+            // 2. Ubah teks menjadi format link yang dipahami browser (URL Encode)
+            const teksTerformat = encodeURIComponent(pesanWA);
+            
+            // 3. Nomor WA tujuan CACHÉ
+            const nomorWA = "6281818199461";
+            
+            // 4. Buka tab baru langsung ke aplikasi WA
+            window.open(`https://wa.me/${nomorWA}?text=${teksTerformat}`, '_blank');
+            
+            // 5. Kosongkan keranjang setelah checkout selesai
+            cart = [];
+            updateCartUI();
         }
 
         // Show Toast Notification Method
