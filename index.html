@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CACHÉ STREETWEAR | Hidden But Loud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        cache: {
+                            black: '#0a0a0a',
+                            white: '#fcfcfc',
+                            red: '#e60000',
+                            gray: '#f3f4f6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Brutalist/Minimalist specific overrides */
+        body {
+            background-color: #fcfcfc;
+            color: #0a0a0a;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        
+        /* Toast Notification */
+        .toast-enter {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast-leave {
+            transform: translateY(-20px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Cart Sidebar & Overlay */
+        #cart-sidebar {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        #cart-sidebar.open {
+            transform: translateX(0);
+        }
+        #cart-overlay {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #cart-overlay.open {
+            opacity: 0.5;
+            pointer-events: auto;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body class="relative min-h-screen flex flex-col">
+
+    <!-- Custom Message Box (Replaces alert) -->
+    <div id="toast" class="toast-leave fixed top-24 left-1/2 -translate-x-1/2 md:left-auto md:-translate-x-0 md:right-8 z-50 bg-cache-black text-white px-6 py-4 rounded shadow-lg transition-all duration-300 flex items-center gap-3 border-2 border-cache-red w-[90%] md:w-auto">
+        <i class="fa-solid fa-circle-info text-cache-red text-xl"></i>
+        <span class="font-semibold text-sm tracking-wide" id="toastMessage">Pesan di sini</span>
+    </div>
+
+    <!-- Cart Overlay & Sidebar -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black z-40" onclick="toggleCart()"></div>
+    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white z-50 shadow-[-5px_0_15px_rgba(0,0,0,0.1)] flex flex-col border-l-4 border-cache-black">
+        <!-- Cart Header -->
+        <div class="p-6 border-b-2 border-cache-black flex justify-between items-center bg-cache-gray">
+            <h2 class="text-2xl font-black uppercase tracking-tighter">Keranjang (<span id="cart-count-title">0</span>)</h2>
+            <button onclick="toggleCart()" class="text-2xl hover:text-cache-red transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <!-- Cart Items List -->
+        <div id="cart-items" class="flex-grow p-6 overflow-y-auto space-y-6">
+            <!-- Items will be injected here via JS -->
+            <div class="text-center text-gray-500 font-medium mt-10" id="empty-cart-msg">
+                Keranjang belanjamu masih kosong.
+            </div>
+        </div>
+
+        <!-- Cart Footer -->
+        <div class="p-6 border-t-2 border-cache-black bg-cache-gray">
+            <div class="flex justify-between items-center mb-4 text-lg font-bold">
+                <span class="uppercase">Total:</span>
+                <span class="text-cache-red" id="cart-total">Rp 0</span>
+            </div>
+            <button onclick="checkout()" class="w-full bg-cache-black text-white font-black uppercase tracking-widest py-4 hover:bg-cache-red transition-colors border-2 border-transparent hover:border-cache-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                Checkout Sekarang
+            </button>
+        </div>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="fixed top-0 w-full bg-cache-white border-b-2 border-cache-black z-30">
+        <div class="container mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+            <!-- Logo -->
+            <div class="text-3xl font-black tracking-tighter uppercase">
+                CACHÉ<span class="text-cache-red">.</span>
+            </div>
+            
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex gap-8 font-bold uppercase tracking-wider text-sm">
+                <a href="#hero" class="hover:text-cache-red transition-colors">Home</a>
+                <a href="#shop" class="hover:text-cache-red transition-colors">Shop</a>
+                <a href="#about" class="hover:text-cache-red transition-colors">Info</a>
+            </nav>
+
+            <!-- Cart Icon (Clickable) -->
+            <div class="relative cursor-pointer hover:text-cache-red transition-colors" onclick="toggleCart()" title="Buka Keranjang">
+                <i class="fa-solid fa-cart-shopping text-2xl"></i>
+                <!-- Cart Counter Badge -->
+                <span id="cart-counter" class="absolute -top-2 -right-3 bg-cache-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow pt-[72px]">
+        
+        <!-- Hero Section with Background Image -->
+        <section id="hero" class="relative min-h-[70vh] flex items-center justify-center overflow-hidden border-b-4 border-cache-black">
+            <!-- Background Image -->
+            <img src="Gemini_Generated_Image_zhd528zhd528zhd5.jpg" alt="CACHÉ Storefront Background" class="absolute inset-0 w-full h-full object-cover object-center" onerror="this.src='https://placehold.co/1200x800/111/333?text=CACHÉ+Store'">
+            <!-- Overlay to make text readable -->
+            <div class="absolute inset-0 bg-black/60"></div>
+            
+            <div class="relative z-10 text-center text-white px-4">
+                <h1 class="text-5xl md:text-8xl font-black uppercase leading-[0.9] tracking-tighter mb-6 drop-shadow-lg">
+                    Hidden <br>
+                    <span class="text-cache-red">But Loud</span>
+                </h1>
+                <p class="text-lg md:text-xl font-medium text-gray-300 max-w-lg mx-auto mb-8 drop-shadow-md">
+                    Subtle on the outside, expressive on the inside. Premium streetwear for the unbothered youth.
+                </p>
+                <a href="#shop" class="inline-block bg-cache-red text-white font-black uppercase tracking-wider px-8 py-4 hover:bg-white hover:text-cache-black transition-colors border-2 border-cache-red hover:border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)]">
+                    Belanja Sekarang
+                </a>
+            </div>
+        </section>
+
+        <!-- Shop Section -->
+        <section id="shop" class="bg-cache-white py-20">
+            <div class="container mx-auto px-4 md:px-8">
+                <h2 class="text-4xl font-black uppercase tracking-tighter mb-12 border-b-4 border-cache-black inline-block pb-2">Koleksi Terbaru <span class="text-cache-red">.</span></h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+                    
+                    <!-- Product 1: T-Shirt -->
+                    <div class="group border-2 border-cache-black bg-white p-4 flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-2 transition-transform duration-300">
+                        <div class="relative bg-gray-100 aspect-square border-2 border-cache-black mb-4 overflow-hidden">
+                            <img src="t-shirt CACHÉ Minimalis.png" id="img-prod-1" alt="Signature Black T-Shirt" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/500x500/0a0a0a/ffffff?text=T-Shirt+Hitam'">
+                            <span class="absolute top-2 left-2 bg-cache-black text-white text-xs font-bold px-2 py-1 uppercase">Best Seller</span>
+                        </div>
+                        <div class="flex-grow flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-xl uppercase tracking-tight">CACHÉ Signature Black T-Shirt</h3>
+                                <p class="text-cache-red font-black text-xl mt-1">Rp 149.000</p>
+                            </div>
+                            
+                            <div class="mt-6 space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pilih Ukuran</label>
+                                    <select id="size-prod-1" class="w-full border-2 border-cache-black p-3 font-semibold bg-white focus:outline-none focus:border-cache-red cursor-pointer">
+                                        <option value="S Oversized">S Oversized</option>
+                                        <option value="M Oversized" selected>M Oversized</option>
+                                        <option value="L Oversized">L Oversized</option>
+                                    </select>
+                                </div>
+                                <button onclick="addProdToCart(1, 'CACHÉ Signature Black T-Shirt', 149000)" class="w-full bg-cache-black text-white font-bold uppercase py-3 hover:bg-cache-red transition-colors border-2 border-cache-black">
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 2: Hoodie -->
+                    <div class="group border-2 border-cache-black bg-white p-4 flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-2 transition-transform duration-300">
+                        <div class="relative bg-gray-100 aspect-square border-2 border-cache-black mb-4 overflow-hidden">
+                            <img src="Gemini_Generated_Image (2).jpeg" id="img-prod-2" alt="Signature Red Hoodie" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/500x500/e60000/ffffff?text=Hoodie+Merah'">
+                            <span class="absolute top-2 left-2 bg-cache-red text-white text-xs font-bold px-2 py-1 uppercase">New Arrival</span>
+                        </div>
+                        <div class="flex-grow flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-xl uppercase tracking-tight">CACHÉ Signature Red Hoodie</h3>
+                                <p class="text-cache-red font-black text-xl mt-1">Rp 249.000</p>
+                            </div>
+                            
+                            <div class="mt-6 space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pilih Ukuran</label>
+                                    <select id="size-prod-2" class="w-full border-2 border-cache-black p-3 font-semibold bg-white focus:outline-none focus:border-cache-red cursor-pointer">
+                                        <option value="S Regular">S Regular</option>
+                                        <option value="M Regular" selected>M Regular</option>
+                                        <option value="L Regular">L Regular</option>
+                                    </select>
+                                </div>
+                                <button onclick="addProdToCart(2, 'CACHÉ Signature Red Hoodie', 249000)" class="w-full bg-cache-black text-white font-bold uppercase py-3 hover:bg-cache-red transition-colors border-2 border-cache-black">
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Trust / About Section -->
+        <section id="about" class="bg-cache-gray border-t-2 border-cache-black py-16">
+            <div class="container mx-auto px-4 md:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                    <!-- Policy 1 -->
+                    <div class="p-6">
+                        <i class="fa-solid fa-rotate-left text-4xl mb-4 text-cache-red"></i>
+                        <h4 class="font-black text-lg uppercase mb-2">Garansi Retur 2x24 Jam</h4>
+                        <p class="text-sm text-gray-600">Garansi tukar ukuran atau produk cacat maksimal 48 jam sejak paket diterima.</p>
+                    </div>
+                    <!-- Policy 2 -->
+                    <div class="p-6 md:border-x-2 border-cache-black">
+                        <i class="fa-solid fa-shirt text-4xl mb-4 text-cache-red"></i>
+                        <h4 class="font-black text-lg uppercase mb-2">Premium Quality</h4>
+                        <p class="text-sm text-gray-600">Material kain katun ekstra tebal dan potongan yang dirancang untuk kenyamanan streetwear.</p>
+                    </div>
+                    <!-- Policy 3 -->
+                    <div class="p-6">
+                        <i class="fa-solid fa-shield-halved text-4xl mb-4 text-cache-red"></i>
+                        <h4 class="font-black text-lg uppercase mb-2">Pembayaran Aman</h4>
+                        <p class="text-sm text-gray-600">Menerima semua metode pembayaran: QRIS, Transfer Bank BCA/Mandiri, E-Wallet.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-cache-black text-white border-t-8 border-cache-red pt-16 pb-8">
+        <div class="container mx-auto px-4 md:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <!-- Col 1 -->
+                <div class="lg:col-span-2">
+                    <h2 class="text-4xl font-black uppercase tracking-tighter mb-4">CACHÉ<span class="text-cache-red">.</span></h2>
+                    <p class="text-gray-400 max-w-sm mb-6 leading-relaxed">
+                        Pakaian harian untuk anak muda berkepribadian subtle yang ingin mengekspresikan diri. 
+                        Hidden on the outside, loud on the inside.
+                    </p>
+                    <div class="flex gap-4 text-2xl">
+                        <a href="#" class="text-white hover:text-cache-red transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="text-white hover:text-cache-red transition-colors"><i class="fa-brands fa-tiktok"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Col 2 -->
+                <div>
+                    <h4 class="font-bold uppercase tracking-widest mb-6 text-cache-red border-b border-gray-800 pb-2">Hubungi Kami</h4>
+                    <ul class="space-y-4 text-gray-300 text-sm">
+                        <li class="flex items-start gap-3">
+                            <i class="fa-brands fa-whatsapp text-lg mt-0.5"></i>
+                            <div>
+                                <span class="block text-xs text-gray-500 uppercase font-bold">WhatsApp CS</span>
+                                <span class="font-mono">0818-1819-9461</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-envelope text-lg mt-0.5"></i>
+                            <div>
+                                <span class="block text-xs text-gray-500 uppercase font-bold">Email</span>
+                                <span>hello@cachestreetwear.com</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-location-dot text-lg mt-0.5"></i>
+                            <div>
+                                <span class="block text-xs text-gray-500 uppercase font-bold">Kota Pengiriman</span>
+                                <span>Salatiga, Jawa Tengah</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Col 3 -->
+                <div>
+                    <h4 class="font-bold uppercase tracking-widest mb-6 text-cache-red border-b border-gray-800 pb-2">Info Layanan</h4>
+                    <ul class="space-y-3 text-gray-300 text-sm mb-6">
+                        <li><a href="#" class="hover:text-white transition-colors">Kebijakan Retur 2x24 Jam</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Panduan Ukuran (Size Chart)</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Syarat & Ketentuan</a></li>
+                    </ul>
+                    
+                    <h4 class="font-bold text-xs uppercase mb-3 text-gray-500">Metode Pembayaran</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-white text-cache-black px-2 py-1 text-[10px] font-black uppercase rounded-sm">QRIS</span>
+                        <span class="bg-white text-cache-black px-2 py-1 text-[10px] font-black uppercase rounded-sm">BCA</span>
+                        <span class="bg-white text-cache-black px-2 py-1 text-[10px] font-black uppercase rounded-sm">MANDIRI</span>
+                        <span class="bg-white text-cache-black px-2 py-1 text-[10px] font-black uppercase rounded-sm">GOPAY</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-xs text-gray-500 font-medium uppercase tracking-widest">
+                    &copy; 2026 CACHÉ STREETWEAR. All Rights Reserved.
+                </div>
+                <div class="flex items-center gap-2 text-xs text-green-500 font-mono bg-gray-900 px-3 py-1 rounded">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Secure HTTPS Checkout</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Cart Functionality -->
+    <script>
+        let cart = [];
+        let toastTimeout;
+
+        // Function to Format Currency (Rupiah)
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        }
+
+        // Toggle Cart Sidebar
+        function toggleCart() {
+            const sidebar = document.getElementById('cart-sidebar');
+            const overlay = document.getElementById('cart-overlay');
+            
+            if(sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('open');
+            }
+        }
+
+        // Add Product to Cart array
+        function addProdToCart(prodId, name, price) {
+            // Get selected size from dropdown
+            const sizeElement = document.getElementById(`size-prod-${prodId}`);
+            const size = sizeElement.value;
+            
+            // Get Image src
+            const imgElement = document.getElementById(`img-prod-${prodId}`);
+            const imgSrc = imgElement.src;
+
+            // Check if item with same name and size exists in cart
+            const existingItem = cart.find(item => item.name === name && item.size === size);
+            
+            if (existingItem) {
+                existingItem.qty += 1;
+            } else {
+                cart.push({
+                    name: name,
+                    price: price,
+                    size: size,
+                    img: imgSrc,
+                    qty: 1
+                });
+            }
+
+            updateCartUI();
+            
+            // Show Success Notification
+            showToast(`Berhasil menambahkan ${name} (${size})!`);
+        }
+
+        // Update the Cart HTML & Badge
+        function updateCartUI() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            const cartCounter = document.getElementById('cart-counter');
+            const cartCountTitle = document.getElementById('cart-count-title');
+            const cartTotal = document.getElementById('cart-total');
+            
+            // Calculate totals
+            let totalItems = 0;
+            let totalPrice = 0;
+            
+            cartItemsContainer.innerHTML = ''; // Clear current list
+
+            if (cart.length === 0) {
+                emptyMsg.style.display = 'block';
+                cartItemsContainer.appendChild(emptyMsg);
+            } else {
+                emptyMsg.style.display = 'none';
+                
+                cart.forEach((item, index) => {
+                    totalItems += item.qty;
+                    totalPrice += (item.price * item.qty);
+                    
+                    // Create Cart Item HTML
+                    const itemHTML = `
+                        <div class="flex gap-4 border-b border-gray-200 pb-4">
+                            <div class="w-20 h-20 bg-gray-100 border border-cache-black shrink-0">
+                                <img src="${item.img}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-grow flex flex-col justify-between">
+                                <div>
+                                    <h4 class="font-bold text-sm uppercase leading-tight">${item.name}</h4>
+                                    <p class="text-xs text-gray-500 font-bold mt-1">Size: ${item.size}</p>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <p class="text-cache-red font-black text-sm">${formatRupiah(item.price)}</p>
+                                    <div class="flex items-center gap-2 border border-cache-black px-2 py-1 text-sm font-bold">
+                                        Qty: ${item.qty}
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="removeCartItem(${index})" class="text-gray-400 hover:text-cache-red transition-colors self-start ml-2">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    cartItemsContainer.innerHTML += itemHTML;
+                });
+            }
+
+            // Update Badges & Total Text
+            cartCounter.innerText = totalItems;
+            cartCountTitle.innerText = totalItems;
+            cartTotal.innerText = formatRupiah(totalPrice);
+        }
+
+        // Remove item from cart
+        function removeCartItem(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        // Checkout Button Action (Dummy)
+        function checkout() {
+            if(cart.length === 0) {
+                showToast("Keranjang Anda masih kosong!");
+                return;
+            }
+            
+            toggleCart(); // Close sidebar
+            // Show checkout message instead of alert()
+            showToast("Memproses Checkout... (Dummy: Anda akan dialihkan ke Payment Gateway / WA)");
+            
+            // Optional: Clear cart after checkout
+            // cart = [];
+            // updateCartUI();
+        }
+
+        // Show Toast Notification Method
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            if(toastTimeout) clearTimeout(toastTimeout);
+            
+            toastMessage.innerText = message;
+            
+            toast.classList.remove('toast-leave');
+            toast.classList.add('toast-enter');
+
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-leave');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
